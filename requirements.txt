@@ -1,1 +1,2 @@
-pip install webdriver-manager
+selenium
+webdriver-manager
