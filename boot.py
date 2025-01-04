@@ -7,29 +7,25 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import chromedriver_autoinstaller
 
 # Instalar automáticamente el ChromeDriver compatible
 chromedriver_autoinstaller.install()
 
-# Configuración de Chrome para Selenium
+# Configurar el ejecutable de Chrome
+CHROME_BINARY_PATH = "/usr/bin/google-chrome"  # Ruta del binario de Chrome en Render
+
+# Configurar opciones de Chrome
 chrome_options = Options()
 chrome_options.add_argument("--headless")  # Modo sin interfaz gráfica
-chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--user-data-dir=/tmp/user_data")  # Carpeta temporal para sesión
+chrome_options.binary_location = CHROME_BINARY_PATH
 
-# Ruta al binario de Chrome en Render
-chrome_binary_path = "/usr/bin/google-chrome"  # Render instala Chrome aquí
-chrome_options.binary_location = chrome_binary_path
-
-# Servicio de ChromeDriver
+# Configurar servicio de ChromeDriver
 service = Service()
 
-# Inicializar el driver de Selenium
+# Inicializar WebDriver
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # Respuestas dinámicas según el horario
