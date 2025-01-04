@@ -12,6 +12,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
+# Configurar Chrome para usar un binario externo
+chrome_binary_path = "/usr/bin/google-chrome"  # Ruta donde estará Google Chrome en Render
+chrome_options.binary_location = chrome_binary_path
+
 # Configuración para Selenium en modo headless
 chrome_options = Options()
 chrome_options.add_argument("--headless")

@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: bot-whatsapp
+    env: python
+    buildCommand: ./render-build.sh && pip install -r requirements.txt
+    startCommand: python boot.py
