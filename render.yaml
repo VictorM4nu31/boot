@@ -1,7 +1,6 @@
 services:
   - type: web
     name: boot
-    env: python
+    env: docker
     plan: free
-    buildCommand: "./render-build.sh && pip install -r requirements.txt"
-    startCommand: "python boot.py"
+    dockerfilePath: ./Dockerfile
