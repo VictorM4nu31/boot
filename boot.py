@@ -1,6 +1,7 @@
 import os
 import time
 import random
+import chromedriver_autoinstaller
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -20,6 +21,14 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--user-data-dir=/tmp/user_data")  # Carpeta temporal para sesión
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=chrome_options)
+
+# Instalar Chrome y ChromeDriver automáticamente
+chromedriver_autoinstaller.install()  # Instala ChromeDriver compatible con la versión de Chrome
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Ejecutar en modo sin interfaz gráfica
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
 
 # Frases de respuesta dinámica
 morning_responses = [
