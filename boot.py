@@ -5,15 +5,9 @@ from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-import chromedriver_autoinstaller
-
-# Instalar automáticamente el ChromeDriver compatible
-chromedriver_autoinstaller.install()
-
-# Configurar el ejecutable de Chrome
-CHROME_BINARY_PATH = "/usr/bin/google-chrome"  # Ruta del binario de Chrome en Render
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # Configurar opciones de Chrome
 chrome_options = Options()
@@ -21,11 +15,8 @@ chrome_options.add_argument("--headless")  # Modo sin interfaz gráfica
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
-# Configurar servicio de ChromeDriver
-service = Service()
-
 # Inicializar WebDriver
-driver = webdriver.Chrome(service=service, options=chrome_options)
+driver = webdriver.Chrome(options=chrome_options)
 
 # Respuestas dinámicas según el horario
 morning_responses = ["¡Buenos días!", "¿Listos para otro día?", "¡Hola! Que tengan un buen día."]
