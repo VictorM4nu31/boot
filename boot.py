@@ -1,7 +1,6 @@
 import os
 import time
 import random
-import chromedriver_autoinstaller
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -10,64 +9,35 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
+import chromedriver_autoinstaller
 
-# Configurar Chrome para usar un binario externo
-chrome_binary_path = "/usr/bin/google-chrome"  # Ruta donde estará Google Chrome en Render
-chrome_options.binary_location = chrome_binary_path
+# Instalar automáticamente el ChromeDriver compatible
+chromedriver_autoinstaller.install()
 
-# Configuración para Selenium en modo headless
+# Configuración de Chrome para Selenium
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless")  # Modo sin interfaz gráfica
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--user-data-dir=/tmp/user_data")  # Carpeta temporal para sesión
-service = Service(ChromeDriverManager().install())
+
+# Ruta al binario de Chrome en Render
+chrome_binary_path = "/usr/bin/google-chrome"  # Render instala Chrome aquí
+chrome_options.binary_location = chrome_binary_path
+
+# Servicio de ChromeDriver
+service = Service()
+
+# Inicializar el driver de Selenium
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
-# Instalar Chrome y ChromeDriver automáticamente
-chromedriver_autoinstaller.install()  # Instala ChromeDriver compatible con la versión de Chrome
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # Ejecutar en modo sin interfaz gráfica
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
+# Respuestas dinámicas según el horario
+morning_responses = ["¡Buenos días!", "¿Listos para otro día?", "¡Hola! Que tengan un buen día."]
+afternoon_responses = ["¡Buenas tardes! ¿Cómo va todo?", "Hola, ¿qué tal su día?"]
+night_responses = ["¡Buenas noches! Que descansen.", "Buenas noches, ¿cómo estuvo su día?"]
+general_responses = ["¡Hola! ¿Qué tal?", "¡Buenas! ¿Cómo están?"]
 
-# Frases de respuesta dinámica
-morning_responses = [
-    "¡Buenos días! 😊",
-    "¿Qué tal? Espero que tengan un gran día.",
-    "¡Hola! Listos para otro día.",
-    "Buen día, gente bonita. ¿Cómo están?",
-    "¡Hola! Que tengan un día increíble."
-]
-
-afternoon_responses = [
-    "¡Buenas tardes! ¿Cómo va todo?",
-    "Hola, buenas tardes. ¿Qué tal su día?",
-    "¡Buenas tardes! Espero que estén teniendo un buen día.",
-    "Que tal, buen día a todos.",
-    "¡Buenas tardes! ¿Qué tal la jornada?"
-]
-
-night_responses = [
-    "¡Buenas noches! Que descansen bien.",
-    "Buenas noches. ¿Cómo estuvo su día?",
-    "¡Buenas noches! Espero que haya sido un día genial.",
-    "Buenas noches, grupo. No olviden descansar.",
-    "¡Chicos, descansen! Mañana será otro gran día."
-]
-
-general_responses = [
-    "¡Hola! ¿Cómo están todos?",
-    "¡Buenas! ¿Qué tal su día?",
-    "¡Hola! Espero que estén bien.",
-    "¡Hey! ¿Cómo van las cosas?",
-    "¡Hola, equipo! ¿Qué cuentan?"
-]
-
-# Función para seleccionar respuesta basada en la hora
 def get_time_based_response():
     current_hour = datetime.now().hour
     if 6 <= current_hour < 12:
@@ -88,10 +58,10 @@ try:
     WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.CSS_SELECTOR, "._3Ul489")))
     print("Sesión iniciada correctamente.")
 
-    # Obtener el grupo desde la variable de entorno
+    # Obtener el nombre del grupo desde variables de entorno
     target_group = os.getenv("TARGET_GROUP", "NombrePorDefecto")
 
-    # Seleccionar el grupo
+    # Seleccionar el grupo o contacto
     search_box = WebDriverWait(driver, 30).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "._3FRCZ.copyable-text.selectable-text"))
     )
@@ -101,14 +71,13 @@ try:
 
     print(f"Grupo '{target_group}' seleccionado.")
 
+    # Escucha activa para responder mensajes
     while True:
         try:
-            # Obtener el último mensaje
             messages = driver.find_elements(By.CSS_SELECTOR, "._1Gy50")
             if messages:
                 last_message = messages[-1].text.lower()
 
-                # Responder si el mensaje es un saludo
                 if any(greeting in last_message for greeting in ["hola", "buenos días", "buenas tardes", "buenas noches"]):
                     response = get_time_based_response()
                     input_box = driver.find_element(By.CSS_SELECTOR, "._3FRCZ.copyable-text.selectable-text")

@@ -1,6 +1,7 @@
 services:
   - type: web
-    name: bot-whatsapp
+    name: boot
     env: python
-    buildCommand: ./render-build.sh && pip install -r requirements.txt
-    startCommand: python boot.py
+    plan: free
+    buildCommand: "./render-build.sh && pip install -r requirements.txt"
+    startCommand: "python boot.py"
