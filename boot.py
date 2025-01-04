@@ -20,7 +20,7 @@ chrome_options = Options()
 chrome_options.add_argument("--headless")  # Modo sin interfaz gráfica
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.binary_location = CHROME_BINARY_PATH
+chrome_options.binary_location = "/usr/bin/google-chrome"
 
 # Configurar servicio de ChromeDriver
 service = Service()
