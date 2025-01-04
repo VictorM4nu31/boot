@@ -4,11 +4,11 @@ FROM selenium/standalone-chrome:4.12.0
 # Establecer el directorio de trabajo
 WORKDIR /app
 
-# Copiar los archivos del proyecto al contenedor
+# Copiar los archivos de tu proyecto al contenedor
 COPY . .
 
-# Instalar las dependencias del proyecto
+# Instalar las dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Establecer el comando predeterminado para ejecutar la aplicación
+# Establecer el comando para ejecutar la aplicación
 CMD ["python", "boot.py"]
