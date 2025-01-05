@@ -12,7 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # Configurar opciones de Chrome
 chrome_options = Options()
 # Comentado para que la interfaz gráfica esté habilitada
-# chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-infobars")
@@ -155,3 +155,15 @@ except Exception as e:
 finally:
     driver.quit()
     print("Navegador cerrado.")
+
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def run_bot():
+    # Coloca aquí tu lógica para iniciar el bot
+    return "Bot ejecutándose correctamente."
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
