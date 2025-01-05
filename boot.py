@@ -1,3 +1,8 @@
+from playwright.__main__ import main as playwright_main
+
+# Instalar navegadores al iniciar el script
+playwright_main(["install"])
+
 import os
 import time
 import random
