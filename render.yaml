@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: boot
+    name: playwright-app
     env: docker
-    plan: free
     dockerfilePath: ./Dockerfile
+    plan: free

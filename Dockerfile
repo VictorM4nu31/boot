@@ -1,24 +1,25 @@
-# Usar una imagen base de Python
+# Usa una imagen base con soporte para Python
 FROM python:3.11-slim
 
-# Instalar dependencias necesarias
-RUN apt-get update && \
-    apt-get install -y wget gnupg && \
-    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list' && \
-    apt-get update && \
-    apt-get install -y google-chrome-stable && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Instala las dependencias del sistema necesarias para Playwright
+RUN apt-get update && apt-get install -y \
+    libnss3 libatk-bridge2.0-0 libxcomposite1 libxrandr2 \
+    libgbm1 libpangocairo-1.0-0 libasound2 libxdamage1 libxkbcommon0 libgtk-3-0 \
+    libdrm2 libxshmfence1 libegl1 libenchant-2-2 libsecret-1-0 libmanette-0.2-0 \
+    libavif15 libgstcodecparsers-1.0-0 libgstgl-1.0-0 libgles2 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Establecer el directorio de trabajo
+# Configura el directorio de trabajo
 WORKDIR /app
 
-# Copiar los archivos de tu proyecto al contenedor
+# Copia los archivos del proyecto
 COPY . .
 
-# Instalar las dependencias de Python
+# Instala las dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Establecer el comando para ejecutar la aplicación
+# Instala navegadores de Playwright
+RUN npx playwright install
+
+# Define el comando de inicio
 CMD ["python", "boot.py"]
