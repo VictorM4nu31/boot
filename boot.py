@@ -2,29 +2,7 @@ import os
 import time
 import random
 from datetime import datetime
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
-# Configurar opciones de Chrome
-chrome_options = Options()
-# Comentado para que la interfaz gráfica esté habilitada
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--disable-infobars")
-chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-chrome_options.add_experimental_option('useAutomationExtension', False)
-
-# Inicializar WebDriver
-try:
-    driver = webdriver.Chrome(options=chrome_options)
-except Exception as e:
-    print(f"Error al inicializar WebDriver: {e}")
-    exit(1)
+from playwright.sync_api import sync_playwright
 
 # Respuestas dinámicas según el horario
 morning_responses = [
@@ -70,91 +48,77 @@ def get_time_based_response():
     else:
         return "¡Hola! ¿Cómo están todos?"
 
-# Función para capturar el estado de la página
-def take_screenshot(driver, name):
-    driver.save_screenshot(f"{name}.png")
+def run_bot():
+    global response_count
+    with sync_playwright() as p:
+        # Iniciar el navegador en modo headless
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context()
+        page = context.new_page()
 
-# Inicializar el bot
-try:
-    # Código para iniciar el navegador y escanear el código QR
-    print("Iniciando el navegador...")
-    driver.get("https://web.whatsapp.com")
-
-    print("Esperando que se escanee el código QR...")
-    try:
-        WebDriverWait(driver, 90).until(EC.presence_of_element_located((By.CSS_SELECTOR, "canvas")))
-        take_screenshot(driver, "qr_detected")
-        print("Sesión iniciada correctamente.")
-    except Exception as e:
-        take_screenshot(driver, "qr_not_detected")
-        print("Error: No se detectó el código QR a tiempo. Verifica que WhatsApp Web haya cargado correctamente.")
-        driver.quit()
-        exit(1)
-
-    # Obtener el nombre del grupo desde variables de entorno
-    target_group = os.getenv("TARGET_GROUP", "App de inglés")
-
-    # Seleccionar el grupo o contacto
-    try:
-        search_box = WebDriverWait(driver, 60).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='textbox']"))
-        )
-        search_box.click()
-        search_box.send_keys(target_group)
-        search_box.send_keys(Keys.ENTER)
-        take_screenshot(driver, "group_selected")
-        print(f"Grupo '{target_group}' seleccionado.")
-
-        # Enviar un mensaje inicial basado en la hora del día
-        input_box = WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "footer div[contenteditable='true']"))
-        )
-        initial_message = get_time_based_response()
-        input_box.click()
-        input_box.send_keys(initial_message)
-        input_box.send_keys(Keys.ENTER)
-        print(f"Mensaje inicial enviado: {initial_message}")
-    except Exception as e:
-        take_screenshot(driver, "search_box_error")
-        print(f"Error: No se pudo encontrar el cuadro de búsqueda o enviar el mensaje inicial. Asegúrate de que el nombre del grupo '{target_group}' sea correcto y que esté disponible en WhatsApp Web.")
-        driver.quit()
-        exit(1)
-
-    # Escucha activa para responder mensajes
-    while True:
+        # Abrir WhatsApp Web
+        page.goto("https://web.whatsapp.com")
+        print("Esperando que se escanee el código QR...")
         try:
-            if response_count >= max_responses:
-                print("Se ha alcanzado el límite de respuestas permitidas.")
-                break
+            # Esperar a que el QR sea escaneado
+            page.wait_for_selector("canvas", timeout=60000)  # Espera 60 segundos
+            print("Sesión iniciada correctamente.")
+        except Exception:
+            print("Error: No se detectó el código QR a tiempo.")
+            browser.close()
+            return
 
-            messages = driver.find_elements(By.CSS_SELECTOR, "span.selectable-text")
-            if messages:
-                last_message = messages[-1].text.lower()
+        # Buscar el grupo
+        target_group = os.getenv("TARGET_GROUP", "App de inglés")
+        try:
+            search_box = page.wait_for_selector("div[role='textbox']", timeout=30000)
+            search_box.fill(target_group)
+            search_box.press("Enter")
+            print(f"Grupo '{target_group}' seleccionado.")
+        except Exception:
+            print("Error: No se pudo encontrar el grupo.")
+            browser.close()
+            return
 
-                for expected, reply in expected_messages.items():
-                    if expected in last_message:
-                        input_box = driver.find_element(By.CSS_SELECTOR, "footer div[contenteditable='true']")
-                        input_box.click()
-                        input_box.send_keys(reply)
-                        input_box.send_keys(Keys.ENTER)
-                        print(f"Respondido con: {reply}")
-                        response_count += 1
-                        time.sleep(2)  # Evitar respuestas rápidas consecutivas
-                        break
+        # Enviar un mensaje inicial
+        try:
+            input_box = page.wait_for_selector("footer div[contenteditable='true']", timeout=30000)
+            initial_message = get_time_based_response()
+            input_box.fill(initial_message)
+            input_box.press("Enter")
+            print(f"Mensaje inicial enviado: {initial_message}")
+        except Exception:
+            print("Error: No se pudo enviar el mensaje inicial.")
+            browser.close()
+            return
 
-            time.sleep(5)
-        except Exception as e:
-            take_screenshot(driver, "error_in_loop")
-            print(f"Error detectado en la escucha activa: {e}")
-            time.sleep(5)
-except KeyboardInterrupt:
-    print("Bot detenido manualmente.")
-except Exception as e:
-    take_screenshot(driver, "general_error")
-    print(f"Error al iniciar el bot: {e}")
-finally:
-    driver.quit()
-    print("Navegador cerrado.")
+        # Escucha activa para responder mensajes
+        while response_count < max_responses:
+            try:
+                # Obtener los últimos mensajes
+                messages = page.query_selector_all("span.selectable-text")
+                if messages:
+                    last_message = messages[-1].inner_text().lower()
+
+                    for expected, reply in expected_messages.items():
+                        if expected in last_message:
+                            input_box = page.query_selector("footer div[contenteditable='true']")
+                            input_box.fill(reply)
+                            input_box.press("Enter")
+                            print(f"Respondido con: {reply}")
+                            response_count += 1
+                            time.sleep(2)  # Evitar respuestas rápidas consecutivas
+                            break
+            except Exception as e:
+                print(f"Error detectado en la escucha activa: {e}")
+                time.sleep(5)
+
+        browser.close()
+        print("Bot detenido.")
+
+if __name__ == "__main__":
+    run_bot()
+
 
 from flask import Flask
 
