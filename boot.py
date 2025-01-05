@@ -1,13 +1,9 @@
-from playwright.__main__ import main as playwright_main
-
-# Instalar navegadores al iniciar el script
-playwright_main(["install"])
-
 import os
 import time
 import random
 from datetime import datetime
 from playwright.sync_api import sync_playwright
+from flask import Flask
 
 # Respuestas dinámicas según el horario
 morning_responses = [
@@ -41,6 +37,11 @@ expected_messages = {
 max_responses = 5
 response_count = 0
 
+# Instalar navegadores automáticamente
+def install_browsers():
+    from playwright.__main__ import main as playwright_install
+    playwright_install()
+
 # Función para obtener respuesta dinámica según la hora
 def get_time_based_response():
     current_hour = datetime.now().hour
@@ -53,7 +54,8 @@ def get_time_based_response():
     else:
         return "¡Hola! ¿Cómo están todos?"
 
-def run_bot():
+# Lógica principal del bot
+def run_bot_logic():
     global response_count
     with sync_playwright() as p:
         # Iniciar el navegador en modo headless
@@ -121,18 +123,15 @@ def run_bot():
         browser.close()
         print("Bot detenido.")
 
-if __name__ == "__main__":
-    run_bot()
-
-
-from flask import Flask
-
+# Flask para el servicio web
 app = Flask(__name__)
 
 @app.route("/")
-def run_bot():
-    # Coloca aquí tu lógica para iniciar el bot
+def run_web_service():
+    # Ejecutar la lógica del bot
+    run_bot_logic()
     return "Bot ejecutándose correctamente."
 
 if __name__ == "__main__":
+    install_browsers()  # Instalar navegadores si no están presentes
     app.run(host="0.0.0.0", port=8080)
